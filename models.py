@@ -13,7 +13,30 @@ from app import db
 def generate_uuid():
     return str(uuid.uuid4())
 
+class WatchlistEntry(db.Model):
+    """Represents a film a user wants to watch."""
+    id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
+    user_id = db.Column(db.String(36), db.ForeignKey("user.id"), nullable=False)
+    film_id = db.Column(db.String(36), db.ForeignKey("film.id"), nullable=False)
+    date_added = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    public = db.Column(db.Boolean, default=True, nullable=False)
 
+    user = db.relationship("User", backref="watchlist_entries")
+    film = db.relationship("Film", backref="watchlist_entries")
+
+    __table_args__ = (
+        db.UniqueConstraint("user_id", "film_id", name="unique_user_film_watchlist"),
+    )
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "user_id": self.user_id,
+            "film_id": self.film_id,
+            "date_added": self.date_added.isoformat(),
+            "public": self.public,
+        }
+    
 class User(db.Model):
     id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
     username = db.Column(db.String(64), unique=True, nullable=False)
