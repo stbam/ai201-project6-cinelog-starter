@@ -46,3 +46,32 @@
 ## PR Description
 
 <!-- Written at the end — feature overview, design decisions, manual testing steps -->
+## PR Description
+
+### What this PR does
+
+Adds a watchlist feature to CineLog, allowing users to save films they want to watch (as distinct from the existing collection feature, which tracks films already watched). Includes:
+
+- A new `WatchlistEntry` model (`models.py`), storing `user_id`, `film_id`, `date_added`, and a `public` visibility flag.
+- `add_to_watchlist()` and `get_watchlist()` service functions (`services/watchlist_service.py`), with duplicate-entry prevention (`AlreadyInWatchlistError`) and nonexistent-film handling (`FilmNotFoundError`).
+- A `GET /watchlist/<user_id>` endpoint to view a user's watchlist, and a `POST /watchlist/<user_id>/add` endpoint to add a film (`routes/watchlist/watchlist.py`).
+- A test covering the nonexistent-film-id case (`tests/test_watchlist.py`).
+
+### Design decisions
+
+**Default visibility (Comment 4):** New watchlist entries default to `public=True`. Reasoning: a watchlist enables film discovery among users before they've watched something, which is more socially useful than the collection feature's "already watched" list, and a public default means this discovery value works without requiring manual configuration from every user. The tradeoff — unintentionally exposing viewing plans someone wanted to keep private — is mitigated by allowing an explicit `public` parameter to opt out per entry.
+
+**Sort order (Comment 5):** `get_watchlist()` returns entries ordered by `date_added` (newest first), matching the maintainer's suggestion and `get_collection()`'s existing convention. A watchlist functions more like an actively-managed queue than a static reference list, so recency is more useful than alphabetical order for the primary use cases (confirming a recent add, deciding what to watch next).
+
+### Manual testing
+
+1. Start the app (e.g. `flask run`, or however this project is normally started).
+2. Create a user and a film via the existing collection/film endpoints (or seed the DB directly).
+3. Add a film to the watchlist:
+
+Confirm a 201 response and that the returned entry has `public: true` and a `date_added` timestamp.
+4. Repeat the same request with the same `user_id`/`film_id` — confirm it fails with `AlreadyInWatchlistError` rather than creating a duplicate.
+5. Repeat with a fake/nonexistent `film_id` (e.g. a random UUID) — confirm it fails with `FilmNotFoundError`.
+6. View the watchlist:
+Confirm films are returned newest-`date_added`-first.
+7. Run the automated suite: `pytest tests/ -v` — all 5 tests should pass.
