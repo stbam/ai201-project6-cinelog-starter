@@ -45,9 +45,6 @@
 
 ## PR Description
 
-<!-- Written at the end — feature overview, design decisions, manual testing steps -->
-## PR Description
-
 ### What this PR does
 
 Adds a watchlist feature to CineLog, allowing users to save films they want to watch (as distinct from the existing collection feature, which tracks films already watched). Includes:
@@ -67,11 +64,11 @@ Adds a watchlist feature to CineLog, allowing users to save films they want to w
 
 1. Start the app (e.g. `flask run`, or however this project is normally started).
 2. Create a user and a film via the existing collection/film endpoints (or seed the DB directly).
-3. Add a film to the watchlist:
+3. Add a film to the watchlist: send a POST request to `/watchlist/<user_id>/add` with JSON body `{ "film_id": "<uuid>" }`.
 
 Confirm a 201 response and that the returned entry has `public: true` and a `date_added` timestamp.
 4. Repeat the same request with the same `user_id`/`film_id` — confirm it fails with `AlreadyInWatchlistError` rather than creating a duplicate.
 5. Repeat with a fake/nonexistent `film_id` (e.g. a random UUID) — confirm it fails with `FilmNotFoundError`.
-6. View the watchlist:
+6. View the watchlist: send a GET request to `/watchlist/<user_id>`.
 Confirm films are returned newest-`date_added`-first.
 7. Run the automated suite: `pytest tests/ -v` — all 5 tests should pass.
