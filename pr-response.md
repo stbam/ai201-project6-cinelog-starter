@@ -37,9 +37,11 @@
 
 ## Comment 6 — Rebase
 
-**What conflicted:**
-**How I resolved it:**
-**How I verified no conflict remains:**
+**What conflicted:** An `add/add` conflict in `.gitignore` — both `main` and my branch independently added the file with slightly different contents (`main`'s version included `.pytest_cache/`, mine didn't).
+
+**How I resolved it:** Kept both sets of entries, since `.gitignore` patterns are additive and combining them is harmless — there was no reason to drop `.pytest_cache/` just because my branch hadn't added it yet.
+
+**How I verified no conflict remains:** After completing the rebase, `git status` showed a clean working tree with no unmerged paths. Running the full test suite afterward surfaced a deeper, pre-existing bug unrelated to the `.gitignore` conflict itself: `WatchlistEntry` was imported and used throughout `watchlist_service.py`, but had never actually been defined in `models.py` — the commit that claimed to add "watchlist model and endpoint" only touched the service and route files. I added the missing `WatchlistEntry` model, mirroring `CollectionEntry`'s structure and incorporating the `public` field (Comment 4) and `date_added`-based sorting (Comment 5). I also fixed two stale docstrings that still described `film_id` as an integer, left over from before the UUID refactor. After these fixes, all 5 tests passed (`pytest tests/ -v`).
 
 ## PR Description
 
